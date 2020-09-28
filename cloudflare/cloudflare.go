@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
-	"os"
 	"time"
 
 	tus "github.com/eventials/go-tus"
@@ -42,7 +43,7 @@ func NewService(cloudflareSetting CloudflareSetting) *CloudflareService {
 }
 
 // Upload 上傳影音檔案
-func (c *CloudflareService) Upload(file *os.File) (UploadReturnModel, error) {
+func (c *CloudflareService) Upload(fileHeader *multipart.FileHeader) (UploadReturnModel, error) {
 
 	var uploadReturnModel UploadReturnModel
 
@@ -65,15 +66,25 @@ func (c *CloudflareService) Upload(file *os.File) (UploadReturnModel, error) {
 		return uploadReturnModel, err
 	}
 
+	file, err := fileHeader.Open()
+	if err != nil {
+		return uploadReturnModel, err
+	}
+
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, file); err != nil {
+		return uploadReturnModel, err
+	}
+
 	// 把檔案打包到
-	upload, err := tus.NewUploadFromFile(file)
+	upload := tus.NewUploadFromBytes(buf.Bytes())
 	if err != nil {
 		return uploadReturnModel, err
 	}
 
 	// 建立 metadata
 	meta := make(map[string]string)
-	meta["name"] = file.Name()
+	meta["name"] = fileHeader.Filename
 	meta["requireSignedURLs"] = "true"
 	upload.Metadata = meta
 
