@@ -9,12 +9,13 @@ import (
 func TestCloudflareService_Upload(t *testing.T) {
 
 	f, err := os.Open("stock.mp4")
-
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	defer f.Close()
+
+	fi, _ := f.Stat()
 
 	var cloudflareSetting CloudflareSetting
 	cloudflareSetting.APIKey = "2876bc25dd10fee6a8f1baec1012a2d31aaa1"
@@ -23,8 +24,19 @@ func TestCloudflareService_Upload(t *testing.T) {
 	cloudflareSetting.APIDomain = "api.cloudflare.com"
 	cloudflareSetting.APIVersion = "v4"
 
+	meta := make(map[string]string)
+	meta["name"] = fi.Name()
+	meta["requireSignedURLs"] = "true"
+
+	var uploadParameter UploadParameter
+	uploadParameter.Filename = fi.Name()
+	uploadParameter.Fingerprint = fmt.Sprintf("%s-%d-%s", fi.Name(), fi.Size(), fi.ModTime())
+	uploadParameter.Metadata = meta
+	uploadParameter.Reader = f
+	uploadParameter.Size = fi.Size()
+
 	cloudflareService := NewService(cloudflareSetting)
-	uploadReturnModel, err := cloudflareService.Upload(f)
+	uploadReturnModel, err := cloudflareService.Upload(uploadParameter)
 	if err != nil {
 		t.Error(err.Error())
 	}

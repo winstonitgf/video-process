@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -43,7 +41,7 @@ func NewService(cloudflareSetting CloudflareSetting) *CloudflareService {
 }
 
 // Upload 上傳影音檔案
-func (c *CloudflareService) Upload(fileHeader *multipart.FileHeader) (UploadReturnModel, error) {
+func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadReturnModel, error) {
 
 	var uploadReturnModel UploadReturnModel
 
@@ -66,27 +64,13 @@ func (c *CloudflareService) Upload(fileHeader *multipart.FileHeader) (UploadRetu
 		return uploadReturnModel, err
 	}
 
-	file, err := fileHeader.Open()
-	if err != nil {
-		return uploadReturnModel, err
-	}
-
-	buf := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buf, file); err != nil {
-		return uploadReturnModel, err
-	}
-
 	// 把檔案打包到
-	upload := tus.NewUploadFromBytes(buf.Bytes())
+	upload := tus.NewUpload(uploadParameter.Reader, uploadParameter.Size, uploadParameter.Metadata, uploadParameter.Fingerprint)
 	if err != nil {
 		return uploadReturnModel, err
 	}
 
-	// 建立 metadata
-	meta := make(map[string]string)
-	meta["name"] = fileHeader.Filename
-	meta["requireSignedURLs"] = "true"
-	upload.Metadata = meta
+	// upload.Metadata = meta
 
 	// 建立上傳工作
 	uploader, err := client.CreateUpload(upload)
@@ -110,13 +94,13 @@ func (c *CloudflareService) Upload(fileHeader *multipart.FileHeader) (UploadRetu
 	}
 
 	// 上傳成功後，查詢結果
-	videoSearchResponse, err := c.Search(file.Name())
+	videoSearchResponse, err := c.Search(uploadParameter.Filename)
 	if err != nil {
 		return uploadReturnModel, err
 	}
 
 	if videoSearchResponse.Success {
-		uploadReturnModel.Filename = file.Name()
+		uploadReturnModel.Filename = uploadParameter.Filename
 		uploadReturnModel.UID = videoSearchResponse.Result[0].UID
 		return uploadReturnModel, nil
 	}

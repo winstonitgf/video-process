@@ -1,5 +1,7 @@
 package cloudflare
 
+import "io"
+
 // CloudflareSetting 設置與 cloudflare 溝通的基本參數
 type CloudflareSetting struct {
 	APIKey       string
@@ -21,6 +23,14 @@ type HttpDoSetting struct {
 	ContentType string
 	AuthEmail   string
 	AuthKey     string
+}
+
+type UploadParameter struct {
+	Filename    string
+	Reader      io.Reader
+	Metadata    map[string]string
+	Size        int64
+	Fingerprint string
 }
 
 type UploadReturnModel struct {
