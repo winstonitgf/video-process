@@ -18,9 +18,9 @@ func TestCloudflareService_Upload(t *testing.T) {
 	fi, _ := f.Stat()
 
 	var cloudflareSetting CloudflareSetting
-	cloudflareSetting.APIKey = "2876bc25dd10fee6a8f1baec1012a2d31aaa1"
-	cloudflareSetting.Email = "ziweiyuntltd@gmail.com"
-	cloudflareSetting.AccountID = "4d1046c79adc4fbc33c93cdb2caacc3c"
+	cloudflareSetting.APIKey = ""
+	cloudflareSetting.Email = ""
+	cloudflareSetting.AccountID = ""
 	cloudflareSetting.APIDomain = "api.cloudflare.com"
 	cloudflareSetting.APIVersion = "v4"
 
@@ -55,7 +55,7 @@ func TestCloudflareService_Search(t *testing.T) {
 	cloudflareSetting.APIVersion = "v4"
 
 	cloudflareService := NewService(cloudflareSetting)
-	_, err := cloudflareService.Search("stock.mp4")
+	_, err := cloudflareService.Search("BDSR-153-NS-TS.ts")
 	if err != nil {
 		t.Error(err.Error())
 	}

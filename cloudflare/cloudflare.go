@@ -79,19 +79,21 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 	}
 
 	// 開始上傳
+	fmt.Println("[cloudflare lib log] 開始上傳")
 	err = uploader.Upload()
 	if err != nil {
 		return uploadReturnModel, err
 	}
+	fmt.Println("[cloudflare lib log] 結束上傳")
 
-	for {
-		progress := upload.Progress()
-		if progress == 100 {
-			break
-		}
-		fmt.Println(upload.Progress())
-		time.Sleep(1 * time.Second)
-	}
+	// for {
+	// 	progress := upload.Progress()
+	// 	if progress == 100 {
+	// 		break
+	// 	}
+	// 	fmt.Println(progress)
+	// 	time.Sleep(1 * time.Second)
+	// }
 
 	// 上傳成功後，查詢結果
 	videoSearchResponse, err := c.Search(uploadParameter.Filename)
