@@ -50,7 +50,7 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 	headers.Add("X-Auth-Key", c.apiKey)
 
 	config := &tus.Config{
-		ChunkSize:           5 * 1024 * 1024, // Cloudflare Stream requires a minimum chunk size of 5MB.
+		ChunkSize:           20 * 1024 * 1024, // Cloudflare Stream requires a minimum chunk size of 5MB.
 		Resume:              false,
 		OverridePatchMethod: false,
 		Store:               nil,
