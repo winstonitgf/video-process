@@ -79,8 +79,13 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 	}
 
 	go func() {
-		fmt.Println(upload.Progress())
-		fmt.Println(upload.Finished())
+		for {
+			fmt.Println(upload.Progress())
+			time.Sleep(5 * time.Second)
+			if upload.Finished() {
+				break
+			}
+		}
 	}()
 
 	// 開始上傳
