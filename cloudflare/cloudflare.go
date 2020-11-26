@@ -51,7 +51,7 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 
 	config := &tus.Config{
 		ChunkSize:           20 * 1024 * 1024, // Cloudflare Stream requires a minimum chunk size of 5MB.
-		Resume:              false,
+		Resume:              true,
 		OverridePatchMethod: false,
 		Store:               nil,
 		Header:              headers,
@@ -80,7 +80,7 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 
 	go func() {
 		for {
-			fmt.Println(upload.Progress())
+			fmt.Println(uploadParameter.Filename, upload.Progress(), "/100")
 			time.Sleep(5 * time.Second)
 			if upload.Finished() {
 				break
