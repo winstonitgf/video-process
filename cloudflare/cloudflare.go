@@ -73,7 +73,7 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadRetur
 	// upload.Metadata = meta
 
 	// 建立上傳工作
-	uploader, err := client.CreateUpload(upload)
+	uploader, err := client.CreateOrResumeUpload(upload)
 	if err != nil {
 		return uploadReturnModel, err
 	}
