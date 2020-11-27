@@ -92,7 +92,7 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (*UploadRetu
 				break
 			}
 			if uploader == nil {
-				fmt.Println("uploader", "上傳發生錯誤，停止進度")
+				fmt.Println("uploader process", process, "上傳發生錯誤，停止進度")
 				break
 			}
 		}
@@ -102,18 +102,23 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (*UploadRetu
 	err = uploader.Upload()
 	if err != nil {
 
+		fmt.Println("[cf lib] 等待10秒")
+		time.Sleep(10 * time.Second)
+
 		// 確認真的上傳失敗，所以查詢看看
 		videoSearchResponse, searchErr := c.Search(uploadParameter.Filename)
 		if searchErr != nil {
 			return nil, searchErr
 		}
 		if videoSearchResponse.Success && len(videoSearchResponse.Result) > 0 {
+			fmt.Println("[cf lib] 上傳失敗，但有查到影片上傳成功了")
 			var uploadReturnModel UploadReturnModel
 			uploadReturnModel.Filename = uploadParameter.Filename
 			uploadReturnModel.UID = videoSearchResponse.Result[0].UID
 			return &uploadReturnModel, nil
 		}
 
+		fmt.Println("[cf lib] 上傳失敗，也查過沒有影片在 CF 上")
 		uploader = nil
 		return nil, err
 	}
