@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/avast/retry-go"
 )
 
 func TestCloudflareService_Upload(t *testing.T) {
 
-	f, err := os.Open("stock.mp4")
+	f, err := os.Open("BD-M02-OS-TS.ts")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -35,13 +37,27 @@ func TestCloudflareService_Upload(t *testing.T) {
 	uploadParameter.Reader = f
 	uploadParameter.Size = fi.Size()
 
-	cloudflareService := NewService(cloudflareSetting)
-	uploadReturnModel, err := cloudflareService.Upload(uploadParameter)
+	cloudflareService, err := NewService(cloudflareSetting)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	fmt.Println("上傳成功：", uploadReturnModel.Filename, uploadReturnModel.UID)
+	var uploadReturnModel *UploadReturnModel
+	_ = retry.Do(
+		func() error {
+			uploadReturnModel, err = cloudflareService.Upload(uploadParameter)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			return err
+		},
+	)
+
+	if uploadReturnModel != nil {
+		fmt.Println("上傳成功：", uploadReturnModel.Filename, uploadReturnModel.UID)
+	} else {
+		fmt.Println(fi.Name(), "上傳失敗")
+	}
 
 	t.Log("OK")
 }
@@ -54,8 +70,8 @@ func TestCloudflareService_Search(t *testing.T) {
 	cloudflareSetting.APIDomain = "api.cloudflare.com"
 	cloudflareSetting.APIVersion = "v4"
 
-	cloudflareService := NewService(cloudflareSetting)
-	_, err := cloudflareService.Search("BDSR-153-NS-TS.ts")
+	cloudflareService, err := NewService(cloudflareSetting)
+	_, err = cloudflareService.Search("BDSR-153-NS-TS.ts")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -78,7 +94,7 @@ func TestCloudflareService_GetSignedURL(t *testing.T) {
 	cloudflareSetting.KeyID = "09adbe4d12fe7c40d0ecb790c3da6b41"
 	cloudflareSetting.StreamDomain = "watch.cloudflarestream.com"
 
-	cloudflareService := NewService(cloudflareSetting)
+	cloudflareService, err := NewService(cloudflareSetting)
 	signedURL, err := cloudflareService.GetSignedURL(videoUID)
 	if err != nil {
 		t.Error(err.Error())

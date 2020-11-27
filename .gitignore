@@ -13,3 +13,5 @@
 stock.mp4
 # Dependency directories (remove the comment below to include it)
 # vendor/
+*.ts
+.DS_Store

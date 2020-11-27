@@ -23,10 +23,12 @@ type CloudflareService struct {
 	keyID        string
 	pem          string
 	streamDomain string
+	store        *Store
+	tusClient    *tus.Client
 }
 
 // NewService 初始化服務
-func NewService(cloudflareSetting CloudflareSetting) *CloudflareService {
+func NewService(cloudflareSetting CloudflareSetting) (*CloudflareService, error) {
 	c := new(CloudflareService)
 	c.apiKey = cloudflareSetting.APIKey
 	c.email = cloudflareSetting.Email
@@ -37,78 +39,99 @@ func NewService(cloudflareSetting CloudflareSetting) *CloudflareService {
 	c.keyID = cloudflareSetting.KeyID
 	c.pem = cloudflareSetting.Pem
 	c.streamDomain = cloudflareSetting.StreamDomain
-	return c
-}
 
-// Upload 上傳影音檔案
-func (c *CloudflareService) Upload(uploadParameter UploadParameter) (UploadReturnModel, error) {
+	// 組合 API
+	cloudflareStreamAPI := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream"
 
-	var uploadReturnModel UploadReturnModel
-
+	// 建立 header 認證資訊
 	headers := make(http.Header)
 	headers.Add("X-Auth-Email", c.email)
 	headers.Add("X-Auth-Key", c.apiKey)
 
+	// 初始化 tus config
+	c.store = new(Store)
 	config := &tus.Config{
-		ChunkSize:           20 * 1024 * 1024, // Cloudflare Stream requires a minimum chunk size of 5MB.
+		ChunkSize:           50 * 1024 * 1024, // Cloudflare Stream requires a minimum chunk size of 5MB.
 		Resume:              true,
 		OverridePatchMethod: false,
-		Store:               nil,
+		Store:               c.store,
 		Header:              headers,
 		HttpClient:          nil,
 	}
 
 	// 初始化 client
-	client, err := tus.NewClient("https://"+c.apiDomain+"/client/"+c.apiVersion+"/accounts/"+c.accountID+"/stream", config)
+	var err error
+	c.tusClient, err = tus.NewClient(cloudflareStreamAPI, config)
 	if err != nil {
-		return uploadReturnModel, err
+		return nil, err
 	}
+
+	return c, nil
+}
+
+// Upload 上傳影音檔案
+func (c *CloudflareService) Upload(uploadParameter UploadParameter) (*UploadReturnModel, error) {
+
+	var err error
 
 	// 把檔案打包到
 	upload := tus.NewUpload(uploadParameter.Reader, uploadParameter.Size, uploadParameter.Metadata, uploadParameter.Fingerprint)
-	if err != nil {
-		return uploadReturnModel, err
-	}
-
-	// upload.Metadata = meta
 
 	// 建立上傳工作
-	uploader, err := client.CreateOrResumeUpload(upload)
+	uploader, err := c.tusClient.CreateOrResumeUpload(upload)
 	if err != nil {
-		return uploadReturnModel, err
+		return nil, err
 	}
 
+	process := time.Now().Unix()
 	go func() {
 		for {
-			fmt.Println(uploadParameter.Filename, upload.Progress(), "/100")
+			fmt.Println(process, uploadParameter.Filename, upload.Progress(), "/100")
 			time.Sleep(5 * time.Second)
-			if upload.Finished() {
+			if upload.Finished() || upload.Progress() >= 99 {
+				break
+			}
+			if uploader == nil {
+				fmt.Println("uploader", "上傳發生錯誤，停止進度")
 				break
 			}
 		}
 	}()
 
 	// 開始上傳
-	fmt.Println("[cloudflare lib log] 開始上傳")
 	err = uploader.Upload()
 	if err != nil {
-		return uploadReturnModel, err
+
+		// 確認真的上傳失敗，所以查詢看看
+		videoSearchResponse, searchErr := c.Search(uploadParameter.Filename)
+		if searchErr != nil {
+			return nil, searchErr
+		}
+		if videoSearchResponse.Success && len(videoSearchResponse.Result) > 0 {
+			var uploadReturnModel UploadReturnModel
+			uploadReturnModel.Filename = uploadParameter.Filename
+			uploadReturnModel.UID = videoSearchResponse.Result[0].UID
+			return &uploadReturnModel, nil
+		}
+
+		uploader = nil
+		return nil, err
 	}
-	fmt.Println("[cloudflare lib log] 結束上傳")
 
 	// 上傳成功後，查詢結果
 	videoSearchResponse, err := c.Search(uploadParameter.Filename)
 	if err != nil {
-		return uploadReturnModel, err
+		return nil, err
 	}
 
 	if videoSearchResponse.Success {
+		var uploadReturnModel UploadReturnModel
 		uploadReturnModel.Filename = uploadParameter.Filename
 		uploadReturnModel.UID = videoSearchResponse.Result[0].UID
-		return uploadReturnModel, nil
+		return &uploadReturnModel, nil
 	}
 
-	return uploadReturnModel, errors.New("上傳結果異常")
+	return nil, errors.New("上傳結果異常")
 }
 
 // Search 查影片資訊
