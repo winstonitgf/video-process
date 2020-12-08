@@ -165,7 +165,7 @@ func (c *CloudflareService) Search(videoName string) (VideoSearchResponse, error
 }
 
 // Search 查影片資訊
-func (c *CloudflareService) AdvanceSearch(status, after string) ([]VideoSearchResponse, error) {
+func (c *CloudflareService) AdvanceSearch(status, after string) (VideoSearchResponse, error) {
 	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?"
 
 	if status != "" {
@@ -175,7 +175,7 @@ func (c *CloudflareService) AdvanceSearch(status, after string) ([]VideoSearchRe
 		endpoint = endpoint + "&after=" + after
 	}
 
-	var videoSearchResponse []VideoSearchResponse
+	var videoSearchResponse VideoSearchResponse
 	var httpSetting HttpDoSetting
 	httpSetting.AuthEmail = c.email
 	httpSetting.AuthKey = c.apiKey
