@@ -228,8 +228,8 @@ func (c *CloudflareService) GetSignedURL(videoUID string) (string, error) {
 		return signedURL, err
 	}
 
-	signedURL = "https://" + c.streamDomain + "/" + string(resp)
-
+	// signedURL = "https://" + c.streamDomain + "/" + string(resp)
+	signedURL = string(resp)
 	return signedURL, nil
 }
 
