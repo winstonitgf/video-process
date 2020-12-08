@@ -166,7 +166,7 @@ func (c *CloudflareService) Search(videoName string) (VideoSearchResponse, error
 
 // Search 查影片資訊
 func (c *CloudflareService) AdvanceSearch(status, after string) (VideoSearchResponse, error) {
-	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?asc=true&include_counts=true"
+	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?asc=true"
 
 	if status != "" {
 		endpoint = endpoint + "&status=" + status
