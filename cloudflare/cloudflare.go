@@ -164,6 +164,38 @@ func (c *CloudflareService) Search(videoName string) (VideoSearchResponse, error
 
 }
 
+// Search 查影片資訊
+func (c *CloudflareService) AdvanceSearch(status, after string) ([]VideoSearchResponse, error) {
+	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?"
+
+	if status != "" {
+		endpoint = endpoint + "status=" + status
+	}
+	if after != "" {
+		endpoint = endpoint + "&after=" + after
+	}
+
+	var videoSearchResponse []VideoSearchResponse
+	var httpSetting HttpDoSetting
+	httpSetting.AuthEmail = c.email
+	httpSetting.AuthKey = c.apiKey
+	httpSetting.Method = http.MethodGet
+	httpSetting.Endpoint = endpoint
+	httpSetting.Body = nil
+	httpSetting.ContentType = "application/json"
+
+	resp, err := c.httpDo(httpSetting)
+	if err != nil {
+		return videoSearchResponse, err
+	}
+
+	fmt.Println(string(resp))
+	json.Unmarshal(resp, &videoSearchResponse)
+	// fmt.Println(videoSearchResponse)
+	return videoSearchResponse, nil
+
+}
+
 // GetSignedURL 取得簽名過的影片網址
 func (c *CloudflareService) GetSignedURL(videoUID string) (string, error) {
 

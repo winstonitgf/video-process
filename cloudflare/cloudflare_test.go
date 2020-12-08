@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/avast/retry-go"
 )
@@ -64,14 +65,37 @@ func TestCloudflareService_Upload(t *testing.T) {
 
 func TestCloudflareService_Search(t *testing.T) {
 	var cloudflareSetting CloudflareSetting
-	cloudflareSetting.APIKey = "2876bc25dd10fee6a8f1baec1012a2d31aaa1"
-	cloudflareSetting.Email = "ziweiyuntltd@gmail.com"
-	cloudflareSetting.AccountID = "4d1046c79adc4fbc33c93cdb2caacc3c"
+	cloudflareSetting.APIKey = "2271dd6dacc6d007c16dd2fbe56855f21fb67"
+	cloudflareSetting.Email = "aa71435723@gmail.com"
+	cloudflareSetting.AccountID = "55a3cef3d255aabc5a510c7ba1caead5"
 	cloudflareSetting.APIDomain = "api.cloudflare.com"
 	cloudflareSetting.APIVersion = "v4"
 
 	cloudflareService, err := NewService(cloudflareSetting)
-	_, err = cloudflareService.Search("BDSR-153-NS-TS.ts")
+	_, err = cloudflareService.Search("BDSR-254-2-NS-TS.ts")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	t.Log("OK")
+}
+
+func TestCloudflareService_AdvanceSearch(t *testing.T) {
+
+	loc, _ := time.LoadLocation("Asia/Taipei")
+	a := time.Date(2020, 12, 8, 15, 18, 0, 0, loc)
+	after := a.UTC().Format("2006-01-02T15:04:05Z07:00")
+	fmt.Println(after)
+
+	var cloudflareSetting CloudflareSetting
+	cloudflareSetting.APIKey = ""
+	cloudflareSetting.Email = ""
+	cloudflareSetting.AccountID = ""
+	cloudflareSetting.APIDomain = "api.cloudflare.com"
+	cloudflareSetting.APIVersion = "v4"
+
+	cloudflareService, err := NewService(cloudflareSetting)
+	_, err = cloudflareService.AdvanceSearch("ready", after)
 	if err != nil {
 		t.Error(err.Error())
 	}
