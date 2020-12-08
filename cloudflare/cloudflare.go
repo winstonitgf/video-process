@@ -166,10 +166,10 @@ func (c *CloudflareService) Search(videoName string) (VideoSearchResponse, error
 
 // Search 查影片資訊
 func (c *CloudflareService) AdvanceSearch(status, after string) (VideoSearchResponse, error) {
-	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?"
+	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream?asc=true&include_counts=true"
 
 	if status != "" {
-		endpoint = endpoint + "status=" + status
+		endpoint = endpoint + "&status=" + status
 	}
 	if after != "" {
 		endpoint = endpoint + "&after=" + after
@@ -189,7 +189,7 @@ func (c *CloudflareService) AdvanceSearch(status, after string) (VideoSearchResp
 		return videoSearchResponse, err
 	}
 
-	fmt.Println(string(resp))
+	// fmt.Println(string(resp))
 	json.Unmarshal(resp, &videoSearchResponse)
 	// fmt.Println(videoSearchResponse)
 	return videoSearchResponse, nil
