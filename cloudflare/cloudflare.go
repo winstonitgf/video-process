@@ -82,6 +82,9 @@ func (c *CloudflareService) Upload(uploadParameter UploadParameter) (*UploadRetu
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		uploader = nil
+	}()
 
 	process := time.Now().Unix()
 	go func() {
