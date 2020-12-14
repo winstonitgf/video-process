@@ -199,6 +199,26 @@ func (c *CloudflareService) AdvanceSearch(status, after string) (VideoSearchResp
 
 }
 
+func (c *CloudflareService) Delete(uid string) error {
+
+	endpoint := "https://" + c.apiDomain + "/client/" + c.apiVersion + "/accounts/" + c.accountID + "/stream/" + uid
+
+	var httpSetting HttpDoSetting
+	httpSetting.AuthEmail = c.email
+	httpSetting.AuthKey = c.apiKey
+	httpSetting.Method = http.MethodDelete
+	httpSetting.Endpoint = endpoint
+	httpSetting.Body = nil
+	httpSetting.ContentType = "application/json"
+
+	_, err := c.httpDo(httpSetting)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSignedURL 取得簽名過的影片網址
 func (c *CloudflareService) GetSignedURL(videoUID string) (string, error) {
 

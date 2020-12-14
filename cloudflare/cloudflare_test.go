@@ -103,6 +103,24 @@ func TestCloudflareService_AdvanceSearch(t *testing.T) {
 	t.Log("OK")
 }
 
+func TestCloudflareService_Delete(t *testing.T) {
+
+	var cloudflareSetting CloudflareSetting
+	cloudflareSetting.APIKey = ""
+	cloudflareSetting.Email = ""
+	cloudflareSetting.AccountID = ""
+	cloudflareSetting.APIDomain = "api.cloudflare.com"
+	cloudflareSetting.APIVersion = "v4"
+
+	cloudflareService, err := NewService(cloudflareSetting)
+	err = cloudflareService.Delete("336ff6d4156685322ec89dbe92ff333f")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	t.Log("OK")
+}
+
 func TestCloudflareService_GetSignedURL(t *testing.T) {
 
 	videoUID := "6efb8dd5f97c16a8e935e46316d0c673"
